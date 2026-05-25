@@ -11,6 +11,59 @@
  * ============================================================================
  */
 
+/* ============================================================================
+ * HIDDEN DEFAULT HOMEPAGE ELEMENTS
+ * ----------------------------------------------------------------------------
+ * Здесь собраны правила, которые скрывают или убирают стандартные элементы
+ * интерфейса Homepage. Если захочешь вернуть что-то назад, искать нужно
+ * в первую очередь в этом блоке.
+ * ============================================================================
+ *
+ * Опциональные скрытия, которые сейчас отключены:
+ *
+ * #layout-groups {
+ *     margin-bottom: 0;
+ * }
+ *
+ * .service-group-name {
+ *     display: none;
+ * }
+ */
+
+.information-widget-search {
+    display: none
+}
+
+#footer {
+    padding: 0;
+    display: none
+}
+
+::-webkit-scrollbar {
+    display: none
+}
+
+dialog ::-webkit-scrollbar {
+    display: none
+}
+
+::-webkit-scrollbar-track {
+    display: none
+}
+
+::-webkit-scrollbar-thumb {
+   display: none
+}
+
+body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ============================================================================
+ * END OF HIDDEN DEFAULT HOMEPAGE ELEMENTS
+ * ========================================================================== */
+
 /* --- TAB NAVIGATION --- */
 #tabs ul {
     width: fit-content !important;
@@ -64,7 +117,7 @@ li.bookmark a {
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-shadow: none !important;
     overflow: hidden !important;
-    margin-bottom: 8px !important;
+    /* TEMP disabled dashboard spacing: margin-bottom: 8px !important; */
     transition: all 0.2s ease-in-out !important;
 }
 
@@ -131,11 +184,10 @@ li.bookmark a:hover .bookmark-name {
         background-color: rgba(58, 58, 58, 0.2) !important;
         border-radius: 50px !important;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        height: 42px !important;
+        /* TEMP disabled vertical spacing audit: height: 42px !important; */
         display: flex !important;
         align-items: center !important;
-        padding: 0 16px !important;
-        margin-top: 10px !important;
+        /* TEMP disabled dashboard spacing: padding: 0 16px !important; margin-top: 10px !important; */
         box-shadow: none !important;
     }
 }
@@ -148,10 +200,9 @@ li.bookmark a:hover .bookmark-name {
         background-color: rgba(58, 58, 58, 0.2) !important;
         border-radius: 25px !important;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        height: auto !important;
-        min-height: 40px !important;
-        padding: 8px 12px !important;
-        margin: 5px 0 !important;
+        /* TEMP disabled vertical spacing audit: height: auto !important; */
+        /* TEMP disabled vertical spacing audit: min-height: 40px !important; */
+        /* TEMP disabled dashboard spacing: padding: 8px 12px !important; margin: 5px 0 !important; */
         width: 100% !important;
     }
 
@@ -159,13 +210,13 @@ li.bookmark a:hover .bookmark-name {
     [class*="information-widget-glances"] > div {
         flex-wrap: wrap !important;
         justify-content: center !important;
-        gap: 8px !important;
+        /* TEMP disabled dashboard spacing: gap: 8px !important; */
     }
 }
 
 /* Global Alignment for Widgets */
 .information-widget-logo img {
-    margin: 0 !important;
+    /* TEMP disabled dashboard spacing: margin: 0 !important; */
     max-height: 24px !important;
 }
 
@@ -174,11 +225,11 @@ li.bookmark a:hover .bookmark-name {
 .resource-icon {
     display: flex !important;
     align-items: center !important;
-    margin: 0 !important;
+    /* TEMP disabled dashboard spacing: margin: 0 !important; */
 }
 
 .information-widget-resource {
-    margin-right: 12px !important;
+    /* TEMP disabled dashboard spacing: margin-right: 12px !important; */
 }
 
 /* ============================================================================

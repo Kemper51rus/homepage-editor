@@ -5,27 +5,26 @@
 }
 
 .services-group {
-    margin-bottom: 10px;
+    /* TEMP disabled dashboard spacing: margin-bottom: 10px; */
 }
 
 /*
 
 #layout-groups {
-    margin-bottom: 0;
+    /* TEMP disabled dashboard spacing: margin-bottom: 0; */
 }
 .service-group-name {
-    display: none
+    /* TEMP disabled dashboard hiding: display: none */
 }
  */
 
 #bookmarks {
-    margin-top: 0;
-    padding-top: 15px;
+    /* TEMP disabled dashboard spacing: margin-top: 0; padding-top: 15px; */
 }
 
 #services + #bookmarks,
 #layout-groups + #bookmarks {
-    margin-top: -47px;
+    /* TEMP disabled dashboard spacing: margin-top: -47px; */
 }
 
 
@@ -41,19 +40,19 @@
 }
 
 #information-widgets {
-    margin-top: 4px !important;
+    /* TEMP disabled dashboard spacing: margin-top: 4px !important; */
 }
 
 div.relative.pb-12 {
-    padding-bottom: 0 !important;
+    /* TEMP disabled dashboard spacing: padding-bottom: 0 !important; */
 }
 
 #homepage-topbar-root {
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
-    gap: 0;
-    margin: 0 1.25rem 0.35rem;
+    /* TEMP disabled vertical spacing audit: gap: 0; */
+    /* TEMP disabled vertical spacing audit: margin: 0 1.25rem 0.35rem; */
 }
 
 #homepage-ip-root {
@@ -270,8 +269,8 @@ max-width: 100%;
 
 ul {
     list-style: none;
-    margin: 0;
-    padding: 0;
+    /* TEMP disabled vertical spacing audit: margin: 0; */
+    /* TEMP disabled vertical spacing audit: padding: 0; */
 }
 .jexummenu > li {
     display: inline-block;
