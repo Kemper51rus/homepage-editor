@@ -9,12 +9,14 @@ ACTION=""
 MODE="${HOMEPAGE_EDITOR_MODE:-auto}"
 TARGET="${HOMEPAGE_TARGET_DIR:-}"
 CONFIG_DIR="${HOMEPAGE_CONFIG_DIR:-}"
+IMAGES_DIR="${HOMEPAGE_IMAGES_DIR:-${IMAGES_REAL_DIR:-}}"
 CUSTOM_INSTALL="${HOMEPAGE_EDITOR_CUSTOM_INSTALL:-prompt}"
 DO_BUILD=1
 DO_RESTART=1
 TMP_DIR=""
 MOD_DIR="${HOMEPAGE_EDITOR_MOD_DIR:-}"
 MOD_SOURCE_MODE="auto"
+RADIO_ASSETS_INSTALLED=0
 
 usage() {
   cat <<'EOF'
@@ -29,6 +31,7 @@ usage() {
   --action NAME      install, update-mod, update-target, install-cards, install-extras, install-radio, install-particles, install-custom, uninstall или status
   --target PATH       путь к checkout gethomepage/homepage
   --config-dir PATH   путь к внешней папке config Homepage
+  --images-dir PATH   путь к папке, которая отдается Homepage как /images
   --custom MODE       что ставить после install/update: prompt, skip, cards, extras или all
   --mode MODE         auto, local или docker
   --repo URL          git-репозиторий мода
@@ -40,6 +43,7 @@ usage() {
 Переменные окружения:
   HOMEPAGE_TARGET_DIR       то же самое, что --target
   HOMEPAGE_CONFIG_DIR       то же самое, что --config-dir
+  HOMEPAGE_IMAGES_DIR       то же самое, что --images-dir; можно также задать IMAGES_REAL_DIR
   HOMEPAGE_EDITOR_CUSTOM_INSTALL
                             prompt, skip, cards, extras или all для custom.css/custom.js дополнений
   HOMEPAGE_EDITOR_MOD_DIR   использовать уже скачанную директорию мода
@@ -79,6 +83,11 @@ parse_args() {
       --config-dir)
         [[ $# -ge 2 ]] || die "--config-dir requires a path"
         CONFIG_DIR="$2"
+        shift 2
+        ;;
+      --images-dir)
+        [[ $# -ge 2 ]] || die "--images-dir requires a path"
+        IMAGES_DIR="$2"
         shift 2
         ;;
       --custom)
@@ -343,6 +352,72 @@ find_config_dir() {
   return 1
 }
 
+env_file_value() {
+  local file="$1"
+  local key="$2"
+  local value=""
+
+  [[ -f "$file" ]] || return 1
+
+  value="$(grep -E "^${key}=" "$file" | tail -n 1 | cut -d= -f2- || true)"
+  [[ -n "$value" ]] || return 1
+
+  value="${value%\"}"
+  value="${value#\"}"
+  value="${value%\'}"
+  value="${value#\'}"
+
+  printf '%s\n' "$value"
+}
+
+find_images_dir() {
+  local candidate=""
+  local file=""
+  local key=""
+
+  if [[ -n "$IMAGES_DIR" ]]; then
+    IMAGES_DIR="$(normalize_path "$IMAGES_DIR")"
+    printf '%s\n' "$IMAGES_DIR"
+    return 0
+  fi
+
+  for file in "$TARGET/.env.local" "$TARGET/.env" "/etc/default/homepage"; do
+    for key in "IMAGES_REAL_DIR" "HOMEPAGE_IMAGES_DIR"; do
+      if candidate="$(env_file_value "$file" "$key")"; then
+        printf '%s\n' "$(normalize_path "$candidate")"
+        return 0
+      fi
+    done
+  done
+
+  if [[ -n "$CONFIG_DIR" ]]; then
+    candidate="$(dirname "$CONFIG_DIR")/homepage-images"
+    if [[ "$(basename "$CONFIG_DIR")" == "homepage-config" && -d "$(dirname "$CONFIG_DIR")" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  fi
+
+  if [[ -n "$TARGET" ]]; then
+    if [[ -d "$TARGET/public" ]]; then
+      printf '%s\n' "$TARGET/public/images"
+      return 0
+    fi
+
+    if [[ -d "$TARGET/.next/standalone/public" ]]; then
+      printf '%s\n' "$TARGET/.next/standalone/public/images"
+      return 0
+    fi
+  fi
+
+  if [[ -d "/srv/homepage-images" ]]; then
+    printf '%s\n' "/srv/homepage-images"
+    return 0
+  fi
+
+  return 1
+}
+
 prompt_config_dir() {
   local candidate=""
   local default_config_dir="/srv/homepage-config"
@@ -488,6 +563,50 @@ fix_config_ownership() {
   for path in "$CONFIG_DIR/custom.js" "$CONFIG_DIR/custom.css"; do
     [[ -e "$path" ]] && chown "$owner:$group" "$path"
   done
+}
+
+fix_radio_assets_ownership() {
+  local images_dir="$1"
+  local owner=""
+  local group=""
+  local real_images_dir=""
+
+  [[ "$(id -u)" -eq 0 ]] || return 0
+
+  real_images_dir="$(readlink -f "$images_dir" 2>/dev/null || true)"
+  [[ -n "$real_images_dir" && -d "$real_images_dir" ]] || return 0
+
+  owner="$(stat -Lc "%U" "$real_images_dir")"
+  group="$(stat -Lc "%G" "$real_images_dir")"
+
+  [[ -n "$owner" && "$owner" != "root" ]] || return 0
+  [[ -n "$group" ]] || group="$owner"
+
+  chown -R "$owner:$group" "$real_images_dir/radio"
+}
+
+install_radio_assets() {
+  [[ "$RADIO_ASSETS_INSTALLED" -eq 0 ]] || return 0
+
+  local source_dir="$MOD_DIR/custom-config/radio/assets/radio"
+  local images_dir=""
+  local radio_dir=""
+
+  [[ -d "$source_dir" ]] || die "Radio assets are missing: $source_dir"
+
+  if ! images_dir="$(find_images_dir)"; then
+    die "Homepage images directory was not found. Pass --images-dir /path/to/images or set HOMEPAGE_IMAGES_DIR/IMAGES_REAL_DIR."
+  fi
+
+  mkdir -p "$images_dir/radio"
+  radio_dir="$(readlink -f "$images_dir/radio" 2>/dev/null || printf '%s\n' "$images_dir/radio")"
+
+  cp -f "$source_dir"/* "$radio_dir/"
+  chmod 0644 "$radio_dir"/*
+  fix_radio_assets_ownership "$images_dir"
+
+  RADIO_ASSETS_INSTALLED=1
+  log "Radio assets installed into $radio_dir"
 }
 
 get_fragment_markers() {
@@ -775,6 +894,10 @@ install_custom_fragment_set() {
   fi
 
   [[ "$installed" -eq 1 ]] || die "Custom preset '$preset' has no installable files"
+
+  if [[ "$preset" == "radio" || "$preset" == "particles" ]]; then
+    install_radio_assets
+  fi
 
   fix_config_ownership
   log "Custom preset '$preset' installed into $CONFIG_DIR"

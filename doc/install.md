@@ -202,7 +202,15 @@ HOMEPAGE_CONFIG_DIR=/srv/homepage-config bash ./install.sh --action install-cust
 1. берут нужный preset из `custom-config/` репозитория мода;
 2. создаёт резервные копии существующих `custom.js` и `custom.css` как `.bak`, если содержимое отличается;
 3. встраивают или обновляют только свой managed-блок в `custom.js` и `custom.css`, не затирая другой preset;
-4. не требуют сборки target-проекта и не перезапускают `homepage.service`.
+4. при установке `radio`, `particles` или `all` копируют картинки радио и `Comfortaa.ttf` из `custom-config/radio/assets/radio/` в каталог, который Homepage отдаёт как `/images/radio`;
+5. не требуют сборки target-проекта и не перезапускают `homepage.service`.
+
+Каталог `/images` определяется автоматически:
+
+1. `HOMEPAGE_IMAGES_DIR`, `IMAGES_REAL_DIR` или `--images-dir`;
+2. `IMAGES_REAL_DIR`/`HOMEPAGE_IMAGES_DIR` из `.env.local`, `.env` target-проекта или `/etc/default/homepage`;
+3. sibling-каталог `/srv/homepage-images`, если config находится в `/srv/homepage-config`;
+4. `public/images` target-проекта, что важно для LXC от Proxmox VE Community Scripts.
 
 Блоки `cards` и `extras` в `custom.css` помечены как управляемые. Не правьте CSS внутри этих блоков руками: при следующей установке или обновлении `install.sh` заменит содержимое между START/END-маркерами. Свои ручные правила добавляйте ниже END-маркера.
 
@@ -248,6 +256,8 @@ HOMEPAGE_CONFIG_DIR=/srv/homepage-config bash ./install.sh --action install-cust
 ```bash
 HOMEPAGE_CONFIG_DIR=/opt/homepage/config bash <(curl -Ls https://raw.githubusercontent.com/Kemper51rus/homepage-configurator/main/install.sh)
 ```
+
+Для radio/FPS assets в community LXC установщик использует `/opt/homepage/public/images/radio`, потому что этот путь отдаётся Homepage наружу как `/images/radio`.
 
 После установки проверьте:
 
